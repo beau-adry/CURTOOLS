@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Inventory Report</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="index.html" class="tab-button">Home</a>
+        <a href="weekly-report.html" class="tab-button">Weekly Report</a>
+    </div>
+
+    <div class="content">
+        <h1>Weekly Inventory Report</h1>
+        
+        <!-- Report Title Section -->
+        <div class="report-wrapper">
+            <p id="reportTitle" class="report-title"></p>
+            <button onclick="copyToClipboard()">Copy</button>
+        </div>
+
+        <!-- File Upload Section for Assets -->
+        <h2>Upload Asset JSON File</h2>
+        <input type="file" id="assetFileInput" accept=".json" />
+        <button onclick="processAssetFile()">Generate Asset Report</button>
+
+        <!-- File Upload Section for Accessories -->
+        <h2>Upload Accessory JSON File</h2>
+        <input type="file" id="accessoryFileInput" accept=".json" />
+        <button onclick="processAccessoryFile()">Add Accessories to Report</button>
+
+        <!-- Report Section -->
+        <h2>Asset and Accessory Report</h2>
+        <div id="reportTable"></div>
+
+        <!-- Truncated Report for Below Par -->
+        <h2>Below Par Report</h2>
+        <div id="belowParReport"></div>
+        <button onclick="copyTruncatedReport()">Copy Below Par Report</button>
+        <button onclick="generatePDF()">Generate PDF</button>
+        <button onclick="generateTicketResponse()">Generate & Copy Ticket Response</button>
+
+
+    </div>
+
+
+    <script>
+        let assetData = null;
+        let accessoryData = null;
+
+        function generateTicketResponse() {
+    const desktopPar = 12;
+    const laptopPar = 8;
+
+    // These are placeholders; replace with your actual counts
+    let desktopsCount = assetData["Desktop"].count;
+    let laptopsCount = assetData["Laptop"].count;
+
+    let desktopBelow = desktopPar - desktopsCount > 0 ? desktopPar - desktopsCount : 0;
+    let laptopBelow = laptopPar - laptopsCount > 0 ? laptopPar - laptopsCount : 0;
+
+    let response = `Hello Jason,
+
+Attached is the current inventory report.
+
+We currently have the following kits available.
+${desktopsCount}x Desktops
+${laptopsCount}x Laptops`;
+
+    // If we are below par, add the below par note
+    if (desktopBelow > 0 || laptopBelow > 0) {
+        response += `\n\nWe are below par levels and need to order the following:`;
+
+        if (desktopBelow > 0) {
+            response += `\n${desktopBelow}x Dell Optiplex's`;
+        }
+
+        if (laptopBelow > 0) {
+            response += `\n${laptopBelow}x Laptops`;
+        }
+    }
+
+    response += `\n\nThank you,\nAdrytech Support`;
+
+    // Copy the generated response to clipboard
+    const tempInput = document.createElement('textarea');
+    tempInput.value = response;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+
+    alert("Ticket response copied to clipboard.");
+}
+
+
+        function getWeekRange() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const monday = new Date(today.setDate(today.getDate() + mondayOffset));
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+
+            const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            const mondayString = monday.toLocaleDateString('en-US', options).replace(/\//g, '-');
+            const sundayString = sunday.toLocaleDateString('en-US', options).replace(/\//g, '-');
+
+            return { mondayString, sundayString };
+        }
+
+        function displayReportTitle() {
+            const { mondayString, sundayString } = getWeekRange();
+            const reportTitle = `Currance Weekly Inventory ${mondayString}/${sundayString}`;
+            document.getElementById('reportTitle').textContent = reportTitle;
+        }
+
+        function copyToClipboard() {
+            const titleText = document.getElementById('reportTitle').textContent;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = titleText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            alert("Report title copied to clipboard.");
+        }
+
+        function copyTruncatedReport() {
+            const truncatedReportText = document.getElementById('belowParReport').textContent;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = truncatedReportText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            alert("Below par report copied to clipboard.");
+        }
+
+// PDF Generation Function
+// PDF Generation Function
+function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
+    const rows = [];
+
+    const tableRows = document.querySelectorAll('#reportTable table tbody tr');
+
+    tableRows.forEach(row => {
+        const columns = Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim());
+
+        // Check if the category is Monitor and handle model data separately
+        const category = columns[0];
+        if (category === "Monitor") {
+            // Properly get model information directly from the already formatted table
+            const modelsCell = row.querySelector('td:nth-child(5)').innerText; // Get the models directly from the 5th cell
+            columns[4] = modelsCell.split('\n').join(', ').trim(); // Replace line breaks with commas for PDF formatting
+        }
+        rows.push(columns);
+    });
+
+    // AutoTable function to generate the table in the PDF
+    doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 20,
+        theme: 'grid',
+        styles: {
+            halign: 'left',
+            fillColor: [52, 73, 94],
+            textColor: [255, 255, 255],
+        },
+        headStyles: {
+            fillColor: [34, 34, 34],
+            textColor: [255, 255, 255],
+        },
+        bodyStyles: {
+            fillColor: [245, 245, 245],
+            textColor: [0, 0, 0],
+        },
+        alternateRowStyles: {
+            fillColor: [240, 240, 240],
+        }
+    });
+
+    // Add title to the top of the PDF
+    const reportTitle = document.getElementById('reportTitle').textContent;
+    doc.setFontSize(16);
+    doc.text(reportTitle, 14, 15); // Position the title at the top of the page
+
+    // Generate the file name based on the report title
+    const fileName = reportTitle.replace(/\s+/g, '_').replace(/\//g, '-') + '.pdf';
+
+    // Save the generated PDF with the dynamic file name
+    doc.save(fileName);
+}
+
+
+
+
+
+        function processAssetFile() {
+            const fileInput = document.getElementById('assetFileInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const jsonData = JSON.parse(event.target.result);
+                        assetData = parseAssets(jsonData.data);
+                        displayParsedData();
+                    } catch (error) {
+                        alert('Invalid asset JSON file.');
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Please upload an asset JSON file.');
+            }
+        }
+
+        function processAccessoryFile() {
+            const fileInput = document.getElementById('accessoryFileInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const jsonData = JSON.parse(event.target.result);
+                        accessoryData = parseAccessories(jsonData.data);
+                        displayParsedData();
+                    } catch (error) {
+                        alert('Invalid accessory JSON file.');
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Please upload an accessory JSON file.');
+            }
+        }
+
+        function parseAssets(data) {
+            const parLevels = {
+                "Desktop": 12,
+                "Laptop": 8
+            };
+
+            const categories = {
+                "Desktop": { count: 0, parLevel: parLevels["Desktop"], missing: 0 },
+                "Laptop": { count: 0, parLevel: parLevels["Laptop"], missing: 0 }
+            };
+
+            data.forEach(item => {
+    if (item["Category"] === "Desktop") {
+        categories["Desktop"].count += 1;  // Count each desktop asset
+    } else if (item["Category"] === "Laptop") {
+        categories["Laptop"].count += 1;   // Count each laptop asset
+    }
+});
+
+
+            for (const key in categories) {
+                if (categories[key].count < categories[key].parLevel) {
+                    categories[key].missing = categories[key].parLevel - categories[key].count;
+                }
+            }
+
+            return categories;
+        }
+
+        function parseAccessories(data) {
+            const parLevels = {
+                "Monitor": 40,
+                "Ethernet Cable": 12,
+                "Display Cables": {
+                    "HDMI to DP": 20,
+                    "HDMI": 20,
+                    "DP": 20
+                },
+                "Web Camera": 12,
+                "Wireless Keyboard + Mouse": 12,
+                "Headset": 20
+            };
+
+            const categories = {
+                "HDMI": { count: 0, parLevel: parLevels["Display Cables"]["HDMI"], missing: 0 },
+                "DP": { count: 0, parLevel: parLevels["Display Cables"]["DP"], missing: 0 },
+                "HDMI to DP": { count: 0, parLevel: parLevels["Display Cables"]["HDMI to DP"], missing: 0 },
+                "Ethernet Cable": { count: 0, parLevel: parLevels["Ethernet Cable"], missing: 0 },
+                "Monitor": { count: 0, parLevel: parLevels["Monitor"], missing: 0, models: {} },
+                "Web Camera": { count: 0, parLevel: parLevels["Web Camera"], missing: 0 },
+                "Wireless Keyboard + Mouse": { count: 0, parLevel: parLevels["Wireless Keyboard + Mouse"], missing: 0 },
+                "Headset": { count: 0, parLevel: parLevels["Headset"], missing: 0 }
+            };
+
+            data.forEach(item => {
+                const category = item["Accessory Category"];
+                const model = item["Model No."];
+                const available = parseInt(item["Avail"], 10) || 0;
+
+                if (category === "Display Cables") {
+                    if (item["Name"].includes("HDMI to Display Port")) {
+                        categories["HDMI to DP"].count += available;
+                    } else if (item["Name"].includes("HDMI")) {
+                        categories["HDMI"].count += available;
+                    } else if (item["Name"].includes("Display Port")) {
+                        categories["DP"].count += available;
+                    }
+                } else if (category === "Network Cable" && item["Name"].includes("Ethernet Cable: 50ft")) {
+                    categories["Ethernet Cable"].count += available;
+                } else if (category === "Monitor" && model !== "34UM68") {
+                    categories["Monitor"].count += available;
+                    if (!categories["Monitor"].models[model]) {
+                        categories["Monitor"].models[model] = 0;
+                    }
+                    categories["Monitor"].models[model] += available;
+                } else if (category === "Web Camera") {
+                    categories["Web Camera"].count += available;
+                } else if (category === "Keyboard + Mouse Bundle" && (model === "MK235" || model === "KM5221W")) {
+                    categories["Wireless Keyboard + Mouse"].count += available;
+                } else if (category === "Headset") {
+                    categories["Headset"].count += available;
+                }
+            });
+
+            // Apply monitor rounding logic (to nearest even number)
+            for (const model in categories["Monitor"].models) {
+                const roundedModelCount = Math.floor(categories["Monitor"].models[model] / 2) * 2;
+                categories["Monitor"].models[model] = roundedModelCount;
+
+                if (roundedModelCount === 0) {
+                    delete categories["Monitor"].models[model];
+                }
+            }
+
+            // Recalculate monitor total count after rounding and exclusion of models with 0 count
+            categories["Monitor"].count = Object.values(categories["Monitor"].models).reduce((total, count) => total + count, 0);
+
+            // Calculate how many are missing to meet the par level
+            for (const key in categories) {
+                if (categories[key].count < categories[key].parLevel) {
+                    categories[key].missing = categories[key].parLevel - categories[key].count;
+                }
+            }
+
+            return categories;
+        }
+
+        // Function to display both asset and accessory data
+        function displayParsedData() {
+            const reportDiv = document.getElementById('reportTable');
+            const belowParDiv = document.getElementById('belowParReport');
+            reportDiv.innerHTML = '';  // Clear previous results
+            belowParDiv.innerHTML = ''; // Clear truncated report
+
+            // Create table element
+            const table = document.createElement('table');
+            table.setAttribute('border', '1');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.textAlign = 'left';
+
+            // Create table header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
+
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.style.padding = '10px';
+                th.style.backgroundColor = '#333';
+                th.style.color = '#fff';
+                th.appendChild(document.createTextNode(headerText));
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create table body
+            const tbody = document.createElement('tbody');
+
+            // Merge asset and accessory data
+            const mergedCategories = { ...assetData, ...accessoryData };
+
+            for (const category in mergedCategories) {
+                const categoryData = mergedCategories[category];
+                const row = document.createElement('tr');
+
+                const categoryCell = document.createElement('td');
+                categoryCell.style.padding = '10px';
+                categoryCell.appendChild(document.createTextNode(category));
+
+                const inventoryCell = document.createElement('td');
+                inventoryCell.style.padding = '10px';
+                inventoryCell.appendChild(document.createTextNode(categoryData.count));
+
+                const parCell = document.createElement('td');
+                parCell.style.padding = '10px';
+                parCell.appendChild(document.createTextNode(categoryData.parLevel));
+
+                const missingCell = document.createElement('td');
+                missingCell.style.padding = '10px';
+                missingCell.appendChild(document.createTextNode(categoryData.missing > 0 ? categoryData.missing : 'Above Par'));
+
+                const modelsCell = document.createElement('td');
+                modelsCell.style.padding = '10px';
+
+                if (category === "Monitor" && Object.keys(categoryData.models).length > 0) {
+                    const modelsList = document.createElement('ul');
+                    for (const model in categoryData.models) {
+                        const modelItem = document.createElement('li');
+                        modelItem.appendChild(document.createTextNode(`${model}: ${categoryData.models[model]}`));
+                        modelsList.appendChild(modelItem);
+                    }
+                    modelsCell.appendChild(modelsList);
+                } else {
+                    modelsCell.appendChild(document.createTextNode("No model numbers available"));
+                }
+
+                row.appendChild(categoryCell);
+                row.appendChild(inventoryCell);
+                row.appendChild(parCell);
+                row.appendChild(missingCell);
+                row.appendChild(modelsCell);
+
+                tbody.appendChild(row);
+            }
+
+            table.appendChild(tbody);
+            reportDiv.appendChild(table);
+
+            // Truncated Report (only show categories below par)
+            let truncatedReport = '';
+            for (const category in mergedCategories) {
+                const categoryData = mergedCategories[category];
+                if (categoryData.missing > 0) {
+                    truncatedReport += `<h3>${category}</h3><p>Missing to meet par: ${categoryData.missing}</p>`;
+                }
+            }
+
+            belowParDiv.innerHTML = truncatedReport;
+        }
+
+        window.onload = displayReportTitle;
+    </script>
+</body>
+</html>

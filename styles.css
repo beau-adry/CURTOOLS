@@ -1,0 +1,134 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #f0f0f0;
+}
+
+h1, h2 {
+    color: #e0e0e0;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 0.5em;
+}
+
+h3 {
+    font-size: 1.5em;
+    margin-bottom: 0.3em;
+    color: #e0e0e0;
+}
+
+/* Navbar Styling */
+.navbar {
+    background-color: #1f1f1f;
+    overflow: hidden;
+    padding: 1em;
+}
+
+.navbar a {
+    float: left;
+    display: block;
+    color: #f0f0f0;
+    text-align: center;
+    padding: 14px 20px;
+    text-decoration: none;
+    font-size: 1.2em;
+}
+
+.navbar a:hover {
+    background-color: #333;
+    color: #f0f0f0;
+}
+
+/* Report Wrapper */
+.content {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #1e1e1e;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+/* Report Title */
+.report-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #2a2a2a;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.report-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+button {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+button:hover {
+    background-color: #5a5a5a;
+}
+
+/* Accessories Report Section */
+#accessoryReport h3 {
+    color: #e0e0e0;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+}
+
+#accessoryReport p {
+    color: #b0b0b0;
+    font-size: 1.1em;
+    margin: 0.2em 0;
+}
+
+#accessoryReport {
+    margin-top: 30px;
+}
+
+h3 {
+    border-bottom: 2px solid #555;
+    padding-bottom: 10px;
+}
+
+p {
+    padding-left: 20px;
+}
+
+/* File Upload */
+input[type="file"] {
+    margin-bottom: 15px;
+    display: block;
+    color: #f0f0f0;
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    padding: 5px;
+}
+
+input[type="file"]::file-selector-button {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background-color: #5a5a5a;
+}
