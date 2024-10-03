@@ -1,134 +1,282 @@
-/* General Styles */
-body {
-    font-family: Arial, sans-serif;
+/* Reset body and html font size */
+html, body {
+    font-size: 16px;  
+    line-height: 1.6; 
     margin: 0;
     padding: 0;
-    background-color: #121212;
-    color: #f0f0f0;
+    box-sizing: border-box; /* Ensure padding and border are included in element's total width and height */
 }
 
-h1, h2 {
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern, clean font */
+    background-color: #1C1C1C; /* Slightly brighter dark background for better contrast */
     color: #e0e0e0;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s ease; /* Smooth transition for background changes */
+}
+
+/* Headings */
+h1, h2, h3 {
+    color: #ffffff;
+    font-weight: 600;
 }
 
 h1 {
-    font-size: 2.5em;
-    margin-bottom: 0.5em;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #555;
+    padding-bottom: 10px;
+    transition: color 0.3s ease;
+}
+
+h2 {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
 }
 
 h3 {
-    font-size: 1.5em;
-    margin-bottom: 0.3em;
-    color: #e0e0e0;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    color: #cccccc;
 }
 
 /* Navbar Styling */
 .navbar {
-    background-color: #1f1f1f;
-    overflow: hidden;
-    padding: 1em;
+    background-color: #202020;
+    padding: 1.25rem; 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    transition: background-color 0.3s ease;
 }
 
 .navbar a {
-    float: left;
-    display: block;
     color: #f0f0f0;
     text-align: center;
-    padding: 14px 20px;
+    padding: 1rem 1.5rem;
     text-decoration: none;
-    font-size: 1.2em;
+    font-size: 1.2rem;
+    display: inline-block;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 5px;
 }
 
 .navbar a:hover {
-    background-color: #333;
+    background-color: #4c4c4c;
+    color: #ffffff;
+}
+
+/* Smooth hover animation */
+.navbar a {
+    position: relative;
+}
+
+.navbar a::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 3px;
+    bottom: 0;
+    left: 0;
+    background-color: #007bff;
+    transition: width 0.4s ease-in-out;
+}
+
+.navbar a:hover::before {
+    width: 100%;
+}
+
+/* Content Wrapper */
+.content, .content-wrapper {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 2rem auto;
+    background-color: #242424;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     color: #f0f0f0;
+    /* Remove hover effect */
+    transition: box-shadow 0.3s ease; /* Only shadow changes on hover, no size change */
+}
+
+button, .copy-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Transition for smooth color change */
+}
+
+button:hover, .copy-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-3px); /* Button moves up slightly on hover */
+}
+
+button.copied, .copy-button.copied {
+    background-color: #28a745; /* Green color for success */
+    color: #ffffff;
+}
+
+
+/* Form Elements */
+input[type="text"], input[type="file"] {
+    margin-bottom: 1.5rem;
+    color: #ffffff;
+    background-color: #333;
+    border: 1px solid #555;
+    padding: 0.75rem 1rem;
+    width: 100%;  
+    max-width: 100%;
+    box-sizing: border-box;
+    border-radius: 8px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus, input[type="file"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+}
+
+input[type="file"]::file-selector-button {
+    background-color: #007bff;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background-color: #0056b3;
+}
+
+/* Grid Layout for Outputs */
+.output-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 1rem;
+    max-width: 800px;
+}
+
+.output-label {
+    font-weight: bold;
+    color: #cccccc;
+}
+
+.output-result {
+    background-color: #444;
+    padding: 0.75rem;
+    border-radius: 5px;
+    color: #f0f0f0;
+    transition: background-color 0.3s ease;
+}
+
+/* Buttons */
+button, .copy-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover, .copy-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px); /* Slight movement for better feedback */
+}
+
+/* Section for checked-out user */
+.checked-out-section {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.checked-out-section .output-result {
+    flex-grow: 1; /* Make sure the result fills the available space */
+    margin-right: 10px; /* Add space between the result and the copy button */
+    margin-left: 10px;
 }
 
 /* Report Wrapper */
-.content {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    background-color: #1e1e1e;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-    margin-top: 20px;
-    border-radius: 8px;
-}
-
-/* Report Title */
 .report-wrapper {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #2a2a2a;
-    padding: 15px;
-    border-radius: 5px;
+    background-color: #303030;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.report-wrapper:hover {
+    background-color: #383838;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .report-title {
-    font-size: 1.5em;
+    font-size: 1.75rem;
     font-weight: bold;
-    color: #f0f0f0;
-}
-
-button {
-    background-color: #3a3a3a;
     color: #ffffff;
-    padding: 10px 20px;
+}
+
+/* HR Styling */
+hr {
     border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
+    border-bottom: 1px solid #444;
+    margin: 2rem 0;
+    transition: border-color 0.3s ease;
 }
 
-button:hover {
-    background-color: #5a5a5a;
+hr:hover {
+    border-color: #007bff;
 }
 
-/* Accessories Report Section */
-#accessoryReport h3 {
-    color: #e0e0e0;
-    font-weight: bold;
-    margin-bottom: 0.5em;
+/* Media Queries for responsiveness */
+@media (max-width: 768px) {
+    .output-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .navbar a {
+        padding: 10px;
+        font-size: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    h2 {
+        font-size: 1.75rem;
+    }
 }
 
-#accessoryReport p {
-    color: #b0b0b0;
-    font-size: 1.1em;
-    margin: 0.2em 0;
+/* Add this to your styles.css */
+.navbar .logo img {
+    height: 70px; /* Adjust the height as needed */
+    width: auto;  /* Keep the aspect ratio */
+    vertical-align: middle; /* Aligns the logo nicely in the navbar */
 }
 
-#accessoryReport {
-    margin-top: 30px;
+.navbar .logo {
+    padding: 0;
+    margin-right: 20px; /* Adjust spacing if needed */
+    display: inline-block;
+    text-decoration: none; /* Remove the underline */
 }
 
-h3 {
-    border-bottom: 2px solid #555;
-    padding-bottom: 10px;
-}
-
-p {
-    padding-left: 20px;
-}
-
-/* File Upload */
-input[type="file"] {
-    margin-bottom: 15px;
-    display: block;
-    color: #f0f0f0;
-    background-color: #2a2a2a;
-    border: 1px solid #555;
-    padding: 5px;
-}
-
-input[type="file"]::file-selector-button {
-    background-color: #3a3a3a;
-    color: #ffffff;
-    padding: 5px 10px;
-    border: none;
-    border-radius: 5px;
-}
-
-input[type="file"]::file-selector-button:hover {
-    background-color: #5a5a5a;
+.navbar img:hover {
+    opacity: 0.8; /* Add a hover effect for a nice visual cue */
 }
