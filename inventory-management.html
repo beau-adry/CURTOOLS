@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>Inventory Management - New User Creation</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div class="navbar">
+            <a href="index.html" class="logo">
+                <img src="adry_logo.png" alt="AdryTech Logo">
+        <a href="inventory-management.html" class="tab-button">Ticket Handling Toolset</a>
+        <a href="weekly-report.html" class="tab-button">Weekly Report</a>
+    </div>
+
+    <!-- Content Wrapper for Everything -->
+    <div class="content"> <!-- Changed from content-wrapper to content -->
+        <!-- Billing Ticket Section -->
+        <h2>Billing Ticket</h2>
+        <label for="billingInput">Service Ticket:</label>
+        <input type="text" id="billingInput" placeholder="Service Ticket #12345 - New Hire Equipment Order - John Smith - 1/11" oninput="processBillingTicket()">
+        <br><br>
+
+        <div class="output-grid">
+            <div class="output-label">Billing Ticket Name:</div>
+            <div class="output-result" id="billingTicket"></div>
+            <button class="copy-button" onclick="copyToClipboard('billingTicket', this)">Copy</button>
+
+            <div class="output-label">Billing Text:</div>
+            <div class="output-result" id="billingText"></div>
+            <button class="copy-button" onclick="copyToClipboard('billingText', this)">Copy</button>
+        </div>
+
+        <hr>
+
+        <!-- New User Creation Section -->
+        <h2>New User Creation</h2>
+        <label for="fullNameInput">Full Name:</label>
+        <input type="text" id="fullNameInput" placeholder="Enter full name (e.g. John Smith)" oninput="processFullName()">
+        <br><br>
+
+        <div class="output-grid">
+            <div class="output-label">First Name:</div>
+            <div class="output-result" id="firstName"></div>
+            <button class="copy-button" onclick="copyToClipboard('firstName', this)">Copy</button>
+
+            <div class="output-label">Last Name:</div>
+            <div class="output-result" id="lastName"></div>
+            <button class="copy-button" onclick="copyToClipboard('lastName', this)">Copy</button>
+
+            <div class="output-label">Username:</div>
+            <div class="output-result" id="username"></div>
+            <button class="copy-button" onclick="copyToClipboard('username', this)">Copy</button>
+
+            <div class="output-label">Email:</div>
+            <div class="output-result" id="email"></div>
+            <button class="copy-button" onclick="copyToClipboard('email', this)">Copy</button>
+        </div>
+
+        <div class="checked-out-section">
+            <div class="output-label">Checked out to:</div>
+            <div class="output-result" id="checkedOutTo"></div>
+            <button class="copy-button" onclick="copyToClipboard('checkedOutTo', this)">Copy</button>
+        </div>
+    </div>
+
+    <script>
+        function processBillingTicket() {
+            const billingInput = document.getElementById("billingInput").value.trim();
+            if (billingInput) {
+                const nameMatch = billingInput.match(/New Hire Equipment Order:\s*([a-zA-Z]+\s+[a-zA-Z]+)/);
+                const fullName = nameMatch ? nameMatch[1] : "Unknown Name";
+
+                const billingTicketName = billingInput.replace(/Service Ticket #\d+\s+-\s+/, '') + ' - Billing';
+                const billingText = `Sent 1 Currance kit to "${fullName}". Original Ticket Below:\n${billingInput}`;
+
+                document.getElementById("billingTicket").textContent = billingTicketName;
+                document.getElementById("billingText").textContent = billingText;
+
+                document.getElementById("fullNameInput").value = fullName;
+                processFullName();
+            } else {
+                document.getElementById("billingTicket").textContent = '';
+                document.getElementById("billingText").textContent = '';
+            }
+        }
+
+        function processFullName() {
+            const fullName = document.getElementById("fullNameInput").value.trim();
+            if (fullName) {
+                const nameParts = fullName.split(" ");
+                const firstName = nameParts[0];
+                const lastName = nameParts.slice(1).join(" ");
+
+                const username = `${firstName}.${lastName}`;
+                const email = `${firstName}.${lastName}@currance.com`;
+
+                document.getElementById("firstName").textContent = firstName;
+                document.getElementById("lastName").textContent = lastName;
+                document.getElementById("username").textContent = username;
+                document.getElementById("email").textContent = email;
+
+                document.getElementById("checkedOutTo").textContent = `Checked out to "${firstName} ${lastName}"`;
+            } else {
+                document.getElementById("firstName").textContent = '';
+                document.getElementById("lastName").textContent = '';
+                document.getElementById("username").textContent = '';
+                document.getElementById("email").textContent = '';
+                document.getElementById("checkedOutTo").textContent = '';
+            }
+        }
+
+        function copyToClipboard(elementId, buttonElement) {
+            // Get the text content to be copied
+            const textToCopy = document.getElementById(elementId).textContent;
+
+            // Create a temporary text area to copy the text
+            const tempInput = document.createElement("textarea");
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+
+            // Visual feedback for the button (switch to green)
+            buttonElement.classList.add('copied');
+
+            // Remove the green success color after 2 seconds
+            setTimeout(() => {
+                buttonElement.classList.remove('copied');
+            }, 2000);
+        }
+    </script>
+
+    <style>
+        .copied {
+            background-color: #28a745 !important; /* Green color for success */
+            color: white !important;
+        }
+    </style>
+</body>
+</html>
