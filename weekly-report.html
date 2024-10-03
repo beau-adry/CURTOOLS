@@ -10,7 +10,9 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="index.html" class="tab-button">Home</a>
+        <a href="index.html" class="logo">
+            <img src="adry_logo.png" alt="AdryTech Logo">
+        <a href="inventory-management.html" class="tab-button">Ticket Handling Toolset</a>
         <a href="weekly-report.html" class="tab-button">Weekly Report</a>
     </div>
 
@@ -20,7 +22,7 @@
         <!-- Report Title Section -->
         <div class="report-wrapper">
             <p id="reportTitle" class="report-title"></p>
-            <button onclick="copyToClipboard()">Copy</button>
+            <button class="copy-button" onclick="copyToClipboard('reportTitle', this)">Copy</button>
         </div>
 
         <!-- File Upload Section for Assets -->
@@ -40,63 +42,59 @@
         <!-- Truncated Report for Below Par -->
         <h2>Below Par Report</h2>
         <div id="belowParReport"></div>
-        <button onclick="copyTruncatedReport()">Copy Below Par Report</button>
+        <button class="copy-button" onclick="copyToClipboard('belowParReport', this)">Copy Below Par Report</button>
         <button onclick="generatePDF()">Generate PDF</button>
         <button onclick="generateTicketResponse()">Generate & Copy Ticket Response</button>
 
-
     </div>
-
 
     <script>
         let assetData = null;
         let accessoryData = null;
 
         function generateTicketResponse() {
-    const desktopPar = 12;
-    const laptopPar = 8;
+            const desktopPar = 12;
+            const laptopPar = 8;
 
-    // These are placeholders; replace with your actual counts
-    let desktopsCount = assetData["Desktop"].count;
-    let laptopsCount = assetData["Laptop"].count;
+            // These are placeholders; replace with your actual counts
+            let desktopsCount = assetData["Desktop"].count;
+            let laptopsCount = assetData["Laptop"].count;
 
-    let desktopBelow = desktopPar - desktopsCount > 0 ? desktopPar - desktopsCount : 0;
-    let laptopBelow = laptopPar - laptopsCount > 0 ? laptopPar - laptopsCount : 0;
+            let desktopBelow = desktopPar - desktopsCount > 0 ? desktopPar - desktopsCount : 0;
+            let laptopBelow = laptopPar - laptopsCount > 0 ? laptopPar - laptopsCount : 0;
 
-    let response = `Hello Jason,
+            let response = `Hello Jason,\n\nAttached is the current inventory report.\n\nWe currently have the following kits available.\n${desktopsCount}x Desktops\n${laptopsCount}x Laptops`;
 
-Attached is the current inventory report.
+            if (desktopBelow > 0 || laptopBelow > 0) {
+                response += `\n\nWe are below par levels and need to order the following:`;
+                if (desktopBelow > 0) {
+                    response += `\n${desktopBelow}x Dell Optiplex's`;
+                }
+                if (laptopBelow > 0) {
+                    response += `\n${laptopBelow}x Laptops`;
+                }
+            }
 
-We currently have the following kits available.
-${desktopsCount}x Desktops
-${laptopsCount}x Laptops`;
+            response += `\n\nThank you,\nAdrytech Support`;
 
-    // If we are below par, add the below par note
-    if (desktopBelow > 0 || laptopBelow > 0) {
-        response += `\n\nWe are below par levels and need to order the following:`;
-
-        if (desktopBelow > 0) {
-            response += `\n${desktopBelow}x Dell Optiplex's`;
-        }
-
-        if (laptopBelow > 0) {
-            response += `\n${laptopBelow}x Laptops`;
-        }
-    }
-
-    response += `\n\nThank you,\nAdrytech Support`;
-
-    // Copy the generated response to clipboard
-    const tempInput = document.createElement('textarea');
+// Copy the generated response to clipboard
+const tempInput = document.createElement('textarea');
     tempInput.value = response;
     document.body.appendChild(tempInput);
     tempInput.select();
     document.execCommand("copy");
     document.body.removeChild(tempInput);
 
-    alert("Ticket response copied to clipboard.");
+    // Optional: Add some visual feedback, e.g., change button text temporarily
+    const button = document.querySelector('button[onclick="generateTicketResponse()"]');
+    button.textContent = "Copied!";
+    button.classList.add('copied');
+    
+    setTimeout(() => {
+        button.textContent = "Generate & Copy Ticket Response";
+        button.classList.remove('copied');
+    }, 2000);
 }
-
 
         function getWeekRange() {
             const today = new Date();
@@ -119,15 +117,19 @@ ${laptopsCount}x Laptops`;
             document.getElementById('reportTitle').textContent = reportTitle;
         }
 
-        function copyToClipboard() {
-            const titleText = document.getElementById('reportTitle').textContent;
+        function copyToClipboard(elementId, buttonElement) {
+            const textToCopy = document.getElementById(elementId).textContent;
             const tempInput = document.createElement('textarea');
-            tempInput.value = titleText;
+            tempInput.value = textToCopy;
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand("copy");
             document.body.removeChild(tempInput);
-            alert("Report title copied to clipboard.");
+
+            buttonElement.classList.add('copied');
+            setTimeout(() => {
+                buttonElement.classList.remove('copied');
+            }, 2000);
         }
 
         function copyTruncatedReport() {
@@ -141,69 +143,54 @@ ${laptopsCount}x Laptops`;
             alert("Below par report copied to clipboard.");
         }
 
-// PDF Generation Function
-// PDF Generation Function
-function generatePDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
 
-    const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
-    const rows = [];
+            const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
+            const rows = [];
 
-    const tableRows = document.querySelectorAll('#reportTable table tbody tr');
+            const tableRows = document.querySelectorAll('#reportTable table tbody tr');
+            tableRows.forEach(row => {
+                const columns = Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim());
+                const category = columns[0];
+                if (category === "Monitor") {
+                    const modelsCell = row.querySelector('td:nth-child(5)').innerText;
+                    columns[4] = modelsCell.split('\n').join(', ').trim();
+                }
+                rows.push(columns);
+            });
 
-    tableRows.forEach(row => {
-        const columns = Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim());
+            doc.autoTable({
+                head: [headers],
+                body: rows,
+                startY: 20,
+                theme: 'grid',
+                styles: {
+                    halign: 'left',
+                    fillColor: [52, 73, 94],
+                    textColor: [255, 255, 255],
+                },
+                headStyles: {
+                    fillColor: [34, 34, 34],
+                    textColor: [255, 255, 255],
+                },
+                bodyStyles: {
+                    fillColor: [245, 245, 245],
+                    textColor: [0, 0, 0],
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 240],
+                }
+            });
 
-        // Check if the category is Monitor and handle model data separately
-        const category = columns[0];
-        if (category === "Monitor") {
-            // Properly get model information directly from the already formatted table
-            const modelsCell = row.querySelector('td:nth-child(5)').innerText; // Get the models directly from the 5th cell
-            columns[4] = modelsCell.split('\n').join(', ').trim(); // Replace line breaks with commas for PDF formatting
+            const reportTitle = document.getElementById('reportTitle').textContent;
+            doc.setFontSize(16);
+            doc.text(reportTitle, 14, 15);
+
+            const fileName = reportTitle.replace(/\s+/g, '_').replace(/\//g, '-') + '.pdf';
+            doc.save(fileName);
         }
-        rows.push(columns);
-    });
-
-    // AutoTable function to generate the table in the PDF
-    doc.autoTable({
-        head: [headers],
-        body: rows,
-        startY: 20,
-        theme: 'grid',
-        styles: {
-            halign: 'left',
-            fillColor: [52, 73, 94],
-            textColor: [255, 255, 255],
-        },
-        headStyles: {
-            fillColor: [34, 34, 34],
-            textColor: [255, 255, 255],
-        },
-        bodyStyles: {
-            fillColor: [245, 245, 245],
-            textColor: [0, 0, 0],
-        },
-        alternateRowStyles: {
-            fillColor: [240, 240, 240],
-        }
-    });
-
-    // Add title to the top of the PDF
-    const reportTitle = document.getElementById('reportTitle').textContent;
-    doc.setFontSize(16);
-    doc.text(reportTitle, 14, 15); // Position the title at the top of the page
-
-    // Generate the file name based on the report title
-    const fileName = reportTitle.replace(/\s+/g, '_').replace(/\//g, '-') + '.pdf';
-
-    // Save the generated PDF with the dynamic file name
-    doc.save(fileName);
-}
-
-
-
-
 
         function processAssetFile() {
             const fileInput = document.getElementById('assetFileInput');
@@ -248,24 +235,13 @@ function generatePDF() {
         }
 
         function parseAssets(data) {
-            const parLevels = {
-                "Desktop": 12,
-                "Laptop": 8
-            };
-
-            const categories = {
-                "Desktop": { count: 0, parLevel: parLevels["Desktop"], missing: 0 },
-                "Laptop": { count: 0, parLevel: parLevels["Laptop"], missing: 0 }
-            };
+            const parLevels = { "Desktop": 12, "Laptop": 8 };
+            const categories = { "Desktop": { count: 0, parLevel: parLevels["Desktop"], missing: 0 }, "Laptop": { count: 0, parLevel: parLevels["Laptop"], missing: 0 } };
 
             data.forEach(item => {
-    if (item["Category"] === "Desktop") {
-        categories["Desktop"].count += 1;  // Count each desktop asset
-    } else if (item["Category"] === "Laptop") {
-        categories["Laptop"].count += 1;   // Count each laptop asset
-    }
-});
-
+                if (item["Category"] === "Desktop") categories["Desktop"].count += 1;
+                else if (item["Category"] === "Laptop") categories["Laptop"].count += 1;
+            });
 
             for (const key in categories) {
                 if (categories[key].count < categories[key].parLevel) {
@@ -280,11 +256,7 @@ function generatePDF() {
             const parLevels = {
                 "Monitor": 40,
                 "Ethernet Cable": 12,
-                "Display Cables": {
-                    "HDMI to DP": 20,
-                    "HDMI": 20,
-                    "DP": 20
-                },
+                "Display Cables": { "HDMI to DP": 20, "HDMI": 20, "DP": 20 },
                 "Web Camera": 12,
                 "Wireless Keyboard + Mouse": 12,
                 "Headset": 20
@@ -331,7 +303,6 @@ function generatePDF() {
                 }
             });
 
-            // Apply monitor rounding logic (to nearest even number)
             for (const model in categories["Monitor"].models) {
                 const roundedModelCount = Math.floor(categories["Monitor"].models[model] / 2) * 2;
                 categories["Monitor"].models[model] = roundedModelCount;
@@ -341,10 +312,8 @@ function generatePDF() {
                 }
             }
 
-            // Recalculate monitor total count after rounding and exclusion of models with 0 count
             categories["Monitor"].count = Object.values(categories["Monitor"].models).reduce((total, count) => total + count, 0);
 
-            // Calculate how many are missing to meet the par level
             for (const key in categories) {
                 if (categories[key].count < categories[key].parLevel) {
                     categories[key].missing = categories[key].parLevel - categories[key].count;
@@ -354,21 +323,18 @@ function generatePDF() {
             return categories;
         }
 
-        // Function to display both asset and accessory data
         function displayParsedData() {
             const reportDiv = document.getElementById('reportTable');
             const belowParDiv = document.getElementById('belowParReport');
-            reportDiv.innerHTML = '';  // Clear previous results
-            belowParDiv.innerHTML = ''; // Clear truncated report
+            reportDiv.innerHTML = '';
+            belowParDiv.innerHTML = '';
 
-            // Create table element
             const table = document.createElement('table');
             table.setAttribute('border', '1');
             table.style.width = '100%';
             table.style.borderCollapse = 'collapse';
             table.style.textAlign = 'left';
 
-            // Create table header
             const thead = document.createElement('thead');
             const headerRow = document.createElement('tr');
             const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
@@ -384,10 +350,7 @@ function generatePDF() {
             thead.appendChild(headerRow);
             table.appendChild(thead);
 
-            // Create table body
             const tbody = document.createElement('tbody');
-
-            // Merge asset and accessory data
             const mergedCategories = { ...assetData, ...accessoryData };
 
             for (const category in mergedCategories) {
@@ -437,7 +400,6 @@ function generatePDF() {
             table.appendChild(tbody);
             reportDiv.appendChild(table);
 
-            // Truncated Report (only show categories below par)
             let truncatedReport = '';
             for (const category in mergedCategories) {
                 const categoryData = mergedCategories[category];
@@ -451,5 +413,12 @@ function generatePDF() {
 
         window.onload = displayReportTitle;
     </script>
+
+    <style>
+        .copied {
+            background-color: #28a745 !important; /* Green color for success */
+            color: white !important;
+        }
+    </style>
 </body>
 </html>
