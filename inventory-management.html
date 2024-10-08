@@ -509,7 +509,11 @@ function copyAllTracking(index) {
     trackingDetails += `Monitor 1: ${monitorTracking1}\n`;
     trackingDetails += `Monitor 2: ${monitorTracking2}\n`;
 
+    // Use the same copyToClipboard function to copy the trackingDetails
+    const buttonElement = document.getElementById('copyAllTrackingButton');
+    copyToClipboard(trackingDetails, buttonElement);
 }
+
 
 
     </script>
