@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Tools - Task Progress Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* General styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1C1C1C;
+            color: #f0f0f0;
+        }
+
+        .task-container {
+            margin-top: 20px;
+            background-color: #2A2A2A;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .task {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .task h3 {
+            margin: 0 0 10px;
+        }
+
+        .task-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .task-buttons .arrows-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .task-buttons button {
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .task-buttons button:hover {
+            background-color: #0056b3;
+        }
+
+        .delete-button {
+            background-color: #ff6347;
+        }
+
+        .delete-button:hover {
+            background-color: #e53d1b;
+        }
+
+        /* Progress bar */
+        .progress-container {
+            margin-top: 10px;
+            background-color: #444;
+            border-radius: 4px;
+            width: 100%;
+            height: 24px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #28a745;
+            width: 0;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* Arrow button styling */
+        .arrow-button {
+            background-color: #007bff; /* Blue when it can move */
+            font-size: 1.2em;
+            padding: 5px 10px;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .arrow-button:hover {
+            background-color: #0056b3;
+        }
+
+        .arrow-button.disabled {
+            background-color: #e53d1b; /* Red when it can't move */
+            cursor: not-allowed;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #2A2A2A;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-content input, .modal-content select {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            border-radius: 4px;
+            border: none;
+        }
+
+        .modal-content button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal-content button:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="index.html" class="logo">
+            <img src="adry_logo.png" alt="AdryTech Logo">
+        </a>
+        <a href="inventory-management.html" class="tab-button">Ticket Handling Toolset</a>
+        <a href="weekly-report.html" class="tab-button">Weekly Report</a>
+        <a href="password-generator.html" class="tab-button">Password Generator</a>
+    </div>
+
+    <div class="content">
+        <h1>Task Progress Tracker</h1>
+        <button onclick="openTaskModal()">New Task</button>
+
+        <!-- Container for all tasks -->
+        <div class="task-container" id="taskContainer">
+        </div>
+    </div>
+
+    <!-- Modal for task creation -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <h3>Create New Task</h3>
+            <select id="deviceType">
+                <option value="Desktop">Desktop</option>
+                <option value="Laptop">Laptop</option>
+            </select>
+            <select id="orderType">
+                <option value="New Hire Order">New Hire Order</option>
+                <option value="Replacement">Replacement</option>
+            </select>
+            <input type="text" id="firstName" placeholder="First Name">
+            <input type="text" id="lastName" placeholder="Last Name">
+            <input type="date" id="startDate">
+            <button onclick="createNewTask()">Create Task</button>
+        </div>
+    </div>
+
+    <script>
+        const taskContainer = document.getElementById('taskContainer');
+        const taskModal = document.getElementById('taskModal');
+        let taskCount = 0;
+
+        // Progress stages and corresponding percentages
+        const progressStages = [
+            { stage: 'User Created', percent: 16 },
+            { stage: 'Equipment Assigned', percent: 32 },
+            { stage: 'User Profile Complete', percent: 50 },
+            { stage: 'Equipment Packaged', percent: 66 },
+            { stage: 'Equipment Shipped', percent: 83 },
+            { stage: 'Process Completed - Billed', percent: 100 }
+        ];
+
+        // Open modal for task creation
+        function openTaskModal() {
+            taskModal.style.display = 'flex';
+        }
+
+        // Function to create a new task
+        function createNewTask() {
+            const deviceType = document.getElementById('deviceType').value;
+            const orderType = document.getElementById('orderType').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const startDate = document.getElementById('startDate').value;
+
+            if (firstName && lastName && startDate) {
+                const taskName = `${orderType}: ${firstName} ${lastName} (${startDate}) (${deviceType})`;
+                taskCount++;
+                const taskId = `task-${taskCount}`;
+
+                const taskElement = document.createElement('div');
+                taskElement.classList.add('task');
+                taskElement.id = taskId;
+                taskElement.innerHTML = `
+                    <h3>${taskName}</h3>
+                    <p><strong>Current Stage:</strong> <span id="${taskId}-stage">User Created</span></p>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="${taskId}-progress" style="width: 16%;"></div>
+                    </div>
+                    <div class="task-buttons">
+                        <div class="arrows-container">
+                            <button class="arrow-button disabled" onclick="moveBackStage('${taskId}')" id="${taskId}-back">&larr;</button>
+                            <button class="arrow-button" onclick="moveForwardStage('${taskId}')" id="${taskId}-forward">&rarr;</button>
+                        </div>
+                        <button class="delete-button" onclick="deleteTask('${taskId}')">Delete</button>
+                    </div>
+                `;
+                taskContainer.appendChild(taskElement);
+
+                // Close modal
+                taskModal.style.display = 'none';
+            } else {
+                alert('Please fill in all fields.');
+            }
+        }
+
+        // Function to move the task forward
+        function moveForwardStage(taskId) {
+            const currentStageElement = document.getElementById(`${taskId}-stage`);
+            const currentStage = currentStageElement.textContent;
+            const nextStageIndex = progressStages.findIndex(stage => stage.stage === currentStage) + 1;
+
+            if (nextStageIndex < progressStages.length) {
+                const newStage = progressStages[nextStageIndex].stage;
+                const newProgress = progressStages[nextStageIndex].percent;
+
+                currentStageElement.textContent = newStage;
+                document.getElementById(`${taskId}-progress`).style.width = `${newProgress}%`;
+
+                document.getElementById(`${taskId}-back`).classList.remove('disabled');
+                if (nextStageIndex === progressStages.length - 1
+                ) {
+                    document.getElementById(`${taskId}-forward`).classList.add('disabled');
+                }
+            }
+        }
+
+        // Function to move the task backward
+        function moveBackStage(taskId) {
+            const currentStageElement = document.getElementById(`${taskId}-stage`);
+            const currentStage = currentStageElement.textContent;
+            const prevStageIndex = progressStages.findIndex(stage => stage.stage === currentStage) - 1;
+
+            if (prevStageIndex >= 0) {
+                const newStage = progressStages[prevStageIndex].stage;
+                const newProgress = progressStages[prevStageIndex].percent;
+
+                currentStageElement.textContent = newStage;
+                document.getElementById(`${taskId}-progress`).style.width = `${newProgress}%`;
+
+                document.getElementById(`${taskId}-forward`).classList.remove('disabled');
+                if (prevStageIndex === 0) {
+                    document.getElementById(`${taskId}-back`).classList.add('disabled');
+                }
+            }
+        }
+
+        // Function to delete the task
+        function deleteTask(taskId) {
+            const taskElement = document.getElementById(taskId);
+            taskContainer.removeChild(taskElement);
+        }
+    </script>
+
+</body>
+</html>

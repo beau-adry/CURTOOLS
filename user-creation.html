@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Creation</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <a href="index.html" class="tab-button">Home</a>
+        <a href="weekly-report.html" class="tab-button">Weekly Report</a>
+        <a href="user-creation.html" class="tab-button">User Creation</a>
+    </div>
+
+    <!-- Content Wrapper to Center Content -->
+    <div class="content">
+        <h1>User Creation</h1>
+
+        <!-- Paste input area -->
+        <h2>Paste User Information:</h2>
+        <textarea id="inputInfo" rows="8" cols="50" placeholder="Paste information from Currance"></textarea>
+        <br><br>
+        <button onclick="processUserInfo()">Process Information</button>
+
+        <!-- Outputs -->
+        <h2>Generated Information</h2>
+        <p><b>User's Name:</b> <span id="userName"></span> <button onclick="copyToClipboard('userName')">Copy</button></p>
+        <p><b>User's Username:</b> <span id="userUsername"></span> <button onclick="copyToClipboard('userUsername')">Copy</button></p>
+        <p><b>User's Email:</b> <span id="userEmail"></span> <button onclick="copyToClipboard('userEmail')">Copy</button></p>
+        <p><b>User's Address:</b> <span id="userAddress"></span> <button onclick="copyToClipboard('userAddress')">Copy</button></p>
+        <p><b>User's Phone Number:</b> <span id="userPhone"></span> <button onclick="copyToClipboard('userPhone')">Copy</button></p>
+        <p><b>User's Team:</b> <span id="userTeam"></span> <button onclick="copyToClipboard('userTeam')">Copy</button></p>
+    </div>
+
+    <script>
+        function processUserInfo() {
+            const inputText = document.getElementById("inputInfo").value;
+            const lines = inputText.split('\n').filter(line => line.trim());
+            const name = lines[0];
+            const team = lines[2];
+            const email = lines[6];
+            const address = lines[5];
+            const phoneNumber = lines[7];
+
+            const fullName = name.split(' ');
+            const firstName = fullName[0];
+            const lastName = fullName[1];
+
+            const username = `SSS\\${firstName}.${lastName}`;
+            const userEmail = `${firstName}.${lastName}@currance.com`;
+            const formattedAddress = `${name}<br>${address.replace(/\s+/g, ' ')}`;
+
+            let teamCategory = team.includes("ARS II") ? `${team} - DESKTOP` : team;
+
+            document.getElementById("userName").innerHTML = name;
+            document.getElementById("userUsername").innerHTML = username;
+            document.getElementById("userEmail").innerHTML = userEmail;
+            document.getElementById("userAddress").innerHTML = formattedAddress;
+            document.getElementById("userPhone").innerHTML = phoneNumber;
+            document.getElementById("userTeam").innerHTML = teamCategory;
+        }
+
+        function copyToClipboard(elementId) {
+            const textToCopy = document.getElementById(elementId).textContent;
+            const tempInput = document.createElement("textarea");
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            alert(`${elementId.replace(/([A-Z])/g, ' $1')} copied to clipboard!`);
+        }
+    </script>
+</body>
+</html>

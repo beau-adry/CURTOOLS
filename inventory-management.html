@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>Inventory Management - New User Creation</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <a href="index.html" class="logo">
+            <img src="adry_logo.png" alt="AdryTech Logo">
+        </a>
+        <a href="inventory-management.html" class="tab-button">Ticket Handling Toolset</a>
+        <a href="weekly-report.html" class="tab-button">Weekly Report</a>
+        <a href="password-generator.html" class="tab-button">Password Generator</a>
+    </div>
+
+    <!-- Flexbox container for side-by-side content -->
+    <div class="main-container">
+        <!-- Left content box (Billing Ticket and New User Creation) -->
+        <div class="content-box">
+            <!-- Billing Ticket Section -->
+            <h2>Billing Ticket</h2>
+            <label for="billingInput">Service Ticket:</label>
+            <input type="text" id="billingInput" placeholder="Service Ticket #12345 - New Hire Equipment Order - John Smith - 1/11" oninput="processBillingTicket()">
+            <br><br>
+
+            <div class="output-grid">
+                <div class="output-label">Billing Ticket Name:</div>
+                <div class="output-result" id="billingTicket"></div>
+                <button class="copy-button" onclick="copyToClipboard('billingTicket', this)">Copy</button>
+
+                <div class="output-label">Billing Text:</div>
+                <div class="output-result" id="billingText"></div>
+                <button class="copy-button" onclick="copyToClipboard('billingText', this)">Copy</button>
+            </div>
+
+            <hr>
+
+            <!-- New User Creation Section -->
+            <h2>New User Creation</h2>
+            <label for="fullNameInput">Full Name:</label>
+            <input type="text" id="fullNameInput" placeholder="Enter full name (e.g. John Smith)" oninput="processFullName()">
+            <br><br>
+
+            <div class="output-grid">
+                <div class="output-label">First Name:</div>
+                <div class="output-result" id="firstName"></div>
+                <button class="copy-button" onclick="copyToClipboard('firstName', this)">Copy</button>
+
+                <div class="output-label">Last Name:</div>
+                <div class="output-result" id="lastName"></div>
+                <button class="copy-button" onclick="copyToClipboard('lastName', this)">Copy</button>
+
+                <div class="output-label">Username:</div>
+                <div class="output-result" id="username"></div>
+                <button class="copy-button" onclick="copyToClipboard('username', this)">Copy</button>
+
+                <div class="output-label">Email:</div>
+                <div class="output-result" id="email"></div>
+                <button class="copy-button" onclick="copyToClipboard('email', this)">Copy</button>
+            </div>
+        </div>
+
+        <!-- New right content box -->
+        <div class="content-box task-box">
+            <h2>Task Management</h2>
+            <button id="newTaskButton" onclick="openNewTaskModal()">New Task</button>
+            <button id="refreshProfilesButton" onclick="showConfirmModalIfProfilesExist()">Refresh Profiles</button>
+
+            <div id="savedProfiles">
+                <h2>Saved Profiles</h2>
+                <ul id="profileList"></ul>
+            </div>
+
+            <!-- New Task Modal -->
+            <div id="newTaskModal" class="modal">
+                <div class="modal-content">
+                    <h2>Create New Task</h2>
+                    <form id="newTaskForm">
+                        <label for="employeeName">Employee Name:</label>
+                        <input type="text" id="employeeName" placeholder="John Smith" required>
+
+                        <label for="deviceName">Device Name:</label>
+                        <input type="text" id="deviceName" placeholder="Enter Device Name (e.g., Laptop or Desktop)" required>
+
+                        <label for="serialNumber">Serial Number:</label>
+                        <input type="text" id="serialNumber" placeholder="SN: 123456" required>
+
+                        <label for="mainTracking">Main Kit Tracking Number:</label>
+                        <input type="text" id="mainTracking" placeholder="Main Kit Tracking" required>
+
+                        <label for="monitorTracking1">Monitor 1 Tracking:</label>
+                        <input type="text" id="monitorTracking1" placeholder="Optional">
+
+                        <label for="monitorTracking2">Monitor 2 Tracking:</label>
+                        <input type="text" id="monitorTracking2" placeholder="Optional">
+
+                        <label for="userEmail">Personal Email (CC):</label>
+                        <input type="email" id="userEmail" placeholder="user@example.com">
+
+                        <button type="button" onclick="createNewProfile()">Create Task</button>
+                        <button type="button" onclick="closeNewTaskModal()">Close</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <h3>Are you sure?</h3>
+        <p>All saved profiles will be removed. Do you want to proceed?</p>
+        <button id="confirmRefresh" class="confirm-button">Yes, remove profiles</button>
+        <button id="cancelRefresh" class="cancel-button">Cancel</button>
+    </div>
+</div>
+
+</body>
+
+    <script>
+function processBillingTicket() {
+    const billingInput = document.getElementById("billingInput").value.trim();
+    if (billingInput) {
+        const nameMatch = billingInput.match(/New Hire Equipment Order:\s*([a-zA-Z]+\s+[a-zA-Z]+)/);
+        const fullName = nameMatch ? nameMatch[1] : "Unknown Name";
+
+        const billingTicketName = billingInput.replace(/Service Ticket #\d+\s+-\s+/, '') + ' - Billing';
+        const billingText = `Sent 1 Currance kit to "${fullName}". Original Ticket Below:\n${billingInput}`;
+
+        document.getElementById("billingTicket").textContent = billingTicketName;
+        document.getElementById("billingText").textContent = billingText;
+
+        document.getElementById("fullNameInput").value = fullName;
+        processFullName();
+    } else {
+        document.getElementById("billingTicket").textContent = '';
+        document.getElementById("billingText").textContent = '';
+    }
+}
+
+function processFullName() {
+    const fullName = document.getElementById("fullNameInput").value.trim();
+    if (fullName) {
+        const nameParts = fullName.split(" ");
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(" ");
+
+        const username = `${firstName}.${lastName}`;
+        const email = `${firstName}.${lastName}@currance.com`;
+
+        document.getElementById("firstName").textContent = firstName;
+        document.getElementById("lastName").textContent = lastName;
+        document.getElementById("username").textContent = username;
+        document.getElementById("email").textContent = email;
+
+        document.getElementById("checkedOutTo").textContent = `Checked out to "${firstName} ${lastName}"`;
+    } else {
+        document.getElementById("firstName").textContent = '';
+        document.getElementById("lastName").textContent = '';
+        document.getElementById("username").textContent = '';
+        document.getElementById("email").textContent = '';
+        document.getElementById("checkedOutTo").textContent = '';
+    }
+}
+
+function copyToClipboard(textOrElementId, buttonElement) {
+    let textToCopy;
+
+    // Check if the textOrElementId is an element ID, if so, get the textContent
+    const element = document.getElementById(textOrElementId);
+    if (element) {
+        textToCopy = element.textContent.trim(); // Retrieve text from the element if ID is passed
+    } else {
+        textToCopy = textOrElementId; // Use the passed text directly if it's not an ID
+    }
+
+    // Create a temporary text area to copy the text
+    const tempInput = document.createElement("textarea");
+    tempInput.style.position = 'absolute'; // Ensure it's off-screen
+    tempInput.style.left = '-9999px';
+    tempInput.value = textToCopy;
+    
+    document.body.appendChild(tempInput);
+    tempInput.select();
+
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            // Green for success
+            buttonElement.classList.add('copied-success');
+        } else {
+            // Red for failure
+            buttonElement.classList.add('copied-failure');
+        }
+    } catch (err) {
+        // Red for exception/failure
+        buttonElement.classList.add('copied-failure');
+    }
+
+    // Always remove the temporary input
+    document.body.removeChild(tempInput);
+
+    // Remove success/failure color after 2 seconds
+    setTimeout(() => {
+        buttonElement.classList.remove('copied-success', 'copied-failure');
+    }, 2000);
+}
+
+
+
+
+
+
+function openNewTaskModal() {
+    document.getElementById("newTaskModal").style.display = "block";
+    
+    // Clear form fields
+    document.getElementById("employeeName").value = "";
+    document.getElementById("deviceName").value = "";
+    document.getElementById("serialNumber").value = "";
+    document.getElementById("mainTracking").value = "";
+    document.getElementById("monitorTracking1").value = "";
+    document.getElementById("monitorTracking2").value = "";
+    document.getElementById("userEmail").value = "";
+}
+
+function closeNewTaskModal() {
+    document.getElementById("newTaskModal").style.display = "none";
+}
+
+function createNewProfile() {
+    const employeeName = document.getElementById("employeeName").value;
+    const deviceName = document.getElementById("deviceName").value;
+    const serialNumber = document.getElementById("serialNumber").value;
+    const mainTracking = document.getElementById("mainTracking").value;
+    const monitorTracking1 = document.getElementById("monitorTracking1").value;
+    const monitorTracking2 = document.getElementById("monitorTracking2").value;
+    const userEmail = document.getElementById("userEmail").value;
+
+    const profile = {
+        employeeName,
+        deviceName,
+        serialNumber,
+        mainTracking,
+        monitorTracking1,
+        monitorTracking2,
+        userEmail
+    };
+
+    let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+    profiles.push(profile);
+    localStorage.setItem("profiles", JSON.stringify(profiles));
+
+    closeNewTaskModal();
+    displayProfiles();
+}
+
+function displayProfiles() {
+    const profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+    const profileList = document.getElementById("profileList");
+    profileList.innerHTML = ""; // Clear list
+
+    profiles.forEach((profile, index) => {
+        const listItem = document.createElement("li");
+        listItem.innerHTML = `
+            ${profile.deviceName}: ${profile.employeeName} <br>
+            <button onclick="viewProfile(${index})">View Profile</button>
+            <button onclick="copyEmail(${index})">Copy Email</button>
+            <button onclick="copyAllInfo(${index}, this)">Copy All Information</button>
+            <button onclick="deleteProfile(${index})">Delete Profile</button>
+        `;
+        profileList.appendChild(listItem);
+    });
+}
+
+function copyEmail(index, buttonElement) {
+    const profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+    const profile = profiles[index];
+
+    let trackingDetails = `Main Kit: ${profile.mainTracking}`;
+    if (profile.monitorTracking1) {
+        trackingDetails += `\nMonitor 1: ${profile.monitorTracking1}`;
+    }
+    if (profile.monitorTracking2) {
+        trackingDetails += `\nMonitor 2: ${profile.monitorTracking2}`;
+    }
+
+    const emailTemplate = `
+Hello Team,
+
+The new hire equipment for ${profile.employeeName} including ${profile.deviceName} (SN: ${profile.serialNumber}), is ready and will be shipped via UPS in the next 24 hours.
+
+UPS Tracking:
+${trackingDetails}
+
+Attached are digital versions of the new hire documentation.
+
+Regards,
+Adrytech Support
+    `;
+
+    // Attempt to copy the text
+    navigator.clipboard.writeText(emailTemplate).then(() => {
+        // Success - turn button green
+        buttonElement.classList.add('copied');
+        setTimeout(() => {
+            buttonElement.classList.remove('copied');
+        }, 2000);
+    }).catch(() => {
+        // Failure - turn button red
+        buttonElement.classList.add('copy-failed');
+        setTimeout(() => {
+            buttonElement.classList.remove('copy-failed');
+        }, 2000);
+    });
+}
+
+
+function viewProfile(index) {
+    const profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+    const profile = profiles[index];
+
+    let trackingDetails = `
+    <div class="tracking-row gray-box">
+        <p><strong>Main Kit:</strong> <span id="mainTrackingDisplay">${profile.mainTracking}</span></p>
+        <button class="copy-button" onclick="copyToClipboard('${profile.mainTracking}', this)">Copy</button>
+    </div>
+    <div class="tracking-row gray-box">
+        <p><strong>Monitor 1:</strong> <span id="monitorTracking1Display">${profile.monitorTracking1 || "N/A"}</span></p>
+        <button class="copy-button" onclick="copyToClipboard('${profile.monitorTracking1 || ''}', this)">Copy</button>
+    </div>
+    <div class="tracking-row gray-box">
+        <p><strong>Monitor 2:</strong> <span id="monitorTracking2Display">${profile.monitorTracking2 || "N/A"}</span></p>
+        <button class="copy-button" onclick="copyToClipboard('${profile.monitorTracking2 || ''}', this)">Copy</button>
+    </div>`;
+
+    const profilePopup = document.createElement("div");
+    profilePopup.classList.add("profile-popup");
+    profilePopup.innerHTML = `
+        <h3>Profile Information</h3>
+        <div class="profile-row gray-box">
+            <p><strong>Employee Name:</strong> ${profile.employeeName}</p>
+            <button class="copy-button" onclick="copyToClipboard('${profile.employeeName}', this)">Copy</button>
+        </div>
+        <div class="profile-row gray-box">
+            <p><strong>Device Name:</strong> ${profile.deviceName}</p>
+            <button class="copy-button" onclick="copyToClipboard('${profile.deviceName}', this)">Copy</button>
+        </div>
+        <div class="profile-row gray-box">
+            <p><strong>Serial Number:</strong> ${profile.serialNumber}</p>
+            <button class="copy-button" onclick="copyToClipboard('${profile.serialNumber}', this)">Copy</button>
+        </div>
+        <div class="profile-row gray-box">
+            <p><strong>Personal Email:</strong> ${profile.userEmail || "N/A"}</p>
+            <button class="copy-button" onclick="copyToClipboard('${profile.userEmail || ''}', this)">Copy</button>
+        </div>
+        <p><strong>Tracking Information:</strong></p>
+        <div id="trackingInfoDisplay">
+            ${trackingDetails}
+        </div>
+        <div id="editTrackingFields" style="display:none;">
+            <label><strong>Main Kit:</strong> <input type="text" id="mainTrackingEdit" value="${profile.mainTracking}" /></label><br>
+            <label><strong>Monitor 1:</strong> <input type="text" id="monitorTracking1Edit" value="${profile.monitorTracking1 || ""}" /></label><br>
+            <label><strong>Monitor 2:</strong> <input type="text" id="monitorTracking2Edit" value="${profile.monitorTracking2 || ""}" /></label><br>
+        </div>
+        <button id="editTrackingButton" onclick="enableTrackingEdit(${index})">Edit Tracking</button>
+        <button id="copyAllTrackingButton" class="blue-button" onclick="copyAllTracking(${index})">Copy All Tracking</button>
+        <button id="saveTrackingButton" style="display:none;" onclick="saveTrackingChanges(${index})">Save Changes</button>
+        <button onclick="closeProfilePopup()">Close</button>
+    `;
+    document.body.appendChild(profilePopup);
+}
+
+
+
+
+function enableTrackingEdit(index) {
+    // Show the input fields for editing tracking info
+    document.getElementById("trackingInfoDisplay").style.display = "none";
+    document.getElementById("editTrackingFields").style.display = "block";
+
+    // Show save button and hide edit button
+    document.getElementById("editTrackingButton").style.display = "none";
+    document.getElementById("saveTrackingButton").style.display = "inline";
+}
+
+function saveTrackingChanges(index) {
+    const profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+
+    // Get the updated values from the input fields
+    const updatedMainTracking = document.getElementById("mainTrackingEdit").value;
+    const updatedMonitorTracking1 = document.getElementById("monitorTracking1Edit").value;
+    const updatedMonitorTracking2 = document.getElementById("monitorTracking2Edit").value;
+
+    // Update the profile in the array
+    profiles[index].mainTracking = updatedMainTracking;
+    profiles[index].monitorTracking1 = updatedMonitorTracking1;
+    profiles[index].monitorTracking2 = updatedMonitorTracking2;
+
+    // Save the updated profile back to localStorage
+    localStorage.setItem("profiles", JSON.stringify(profiles));
+
+    // Update the displayed text in the modal with new values
+    document.getElementById("mainTrackingDisplay").textContent = updatedMainTracking;
+    document.getElementById("monitorTracking1Display").textContent = updatedMonitorTracking1 || "N/A";
+    document.getElementById("monitorTracking2Display").textContent = updatedMonitorTracking2 || "N/A";
+
+    // Reapply the onclick for the copy buttons with updated values
+    document.querySelector(".tracking-row:nth-child(1) .copy-button").onclick = function() { copyToClipboard(updatedMainTracking, this); };
+    document.querySelector(".tracking-row:nth-child(2) .copy-button").onclick = function() { copyToClipboard(updatedMonitorTracking1 || 'N/A', this); };
+    document.querySelector(".tracking-row:nth-child(3) .copy-button").onclick = function() { copyToClipboard(updatedMonitorTracking2 || 'N/A', this); };
+
+    // Hide the edit inputs and show the updated tracking information
+    document.getElementById("trackingInfoDisplay").style.display = "block";
+    document.getElementById("editTrackingFields").style.display = "none";
+    
+    // Show the Edit Tracking button and hide the Save Changes button
+    document.getElementById("editTrackingButton").style.display = "inline";
+    document.getElementById("saveTrackingButton").style.display = "none";
+}
+
+
+
+function deleteProfile(index) {
+    let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+    profiles.splice(index, 1);
+    localStorage.setItem("profiles", JSON.stringify(profiles));
+    displayProfiles();
+}
+
+function closeProfilePopup() {
+    document.querySelector(".profile-popup").remove();
+}
+
+// Load profiles when page loads
+window.onload = displayProfiles;
+
+function copyAllInfo(index, buttonElement) {
+    const profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+    const profile = profiles[index];
+
+    // Format the tracking information
+    let trackingDetails = `Main Kit: ${profile.mainTracking}`;
+    if (profile.monitorTracking1) {
+        trackingDetails += `\nMonitor 1: ${profile.monitorTracking1}`;
+    }
+    if (profile.monitorTracking2) {
+        trackingDetails += `\nMonitor 2: ${profile.monitorTracking2}`;
+    }
+
+    // Combine all the information into one formatted string
+    const allInfo = `
+Employee Name: ${profile.employeeName}
+
+Device Name: ${profile.deviceName}
+
+Serial Number: ${profile.serialNumber}
+
+Tracking Information:
+${trackingDetails}
+
+Personal Email: ${profile.userEmail}
+    `;
+
+    // Use the same copyToClipboard function to copy all information
+    copyToClipboard(allInfo, buttonElement);
+}
+
+// Check if there are profiles and show the confirm modal
+function showConfirmModalIfProfilesExist() {
+    const profiles = JSON.parse(localStorage.getItem('profiles')) || [];
+    if (profiles.length > 0) {
+        document.getElementById('confirmModal').style.display = 'block';
+    } else {
+        alert('No saved profiles to remove.');
+    }
+}
+
+// Hide the modal
+function hideConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+// Clear profiles when confirmed
+function clearProfiles() {
+    localStorage.removeItem('profiles');
+    displayProfiles(); // Update UI to reflect removed profiles
+    hideConfirmModal();
+}
+
+// Attach event listeners to the buttons
+document.getElementById('confirmRefresh').addEventListener('click', clearProfiles);
+document.getElementById('cancelRefresh').addEventListener('click', hideConfirmModal);
+
+function copyAllTracking(index) {
+    // Grab the values directly from the DOM (to ensure the updated values are used)
+    const mainTracking = document.getElementById('mainTrackingDisplay').textContent.trim();
+    const monitorTracking1 = document.getElementById('monitorTracking1Display').textContent.trim() || 'N/A';
+    const monitorTracking2 = document.getElementById('monitorTracking2Display').textContent.trim() || 'N/A';
+
+    // Format the tracking information
+    let trackingDetails = `Main Kit: ${mainTracking}\n`;
+    trackingDetails += `Monitor 1: ${monitorTracking1}\n`;
+    trackingDetails += `Monitor 2: ${monitorTracking2}\n`;
+
+}
+
+
+    </script>
+
+    <style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(28, 28, 28, 0.9); /* Dark background */
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #2a2a2a; /* Dark background */
+    color: #f0f0f0;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #444;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.profile-popup {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -20%);
+    background-color: #2a2a2a; /* Dark background */
+    color: #f0f0f0;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+}
+
+.profile-popup h3 {
+    margin-top: 0;
+    color: #ffffff;
+}
+
+.profile-popup button {
+    margin-top: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Flexbox container for side-by-side content */
+.main-container {
+    display: flex;
+    justify-content: center; /* Center the content horizontally */
+    gap: 20px; /* Adjusts the gap between the content boxes */
+    padding: 20px;
+    margin: 0 auto; /* Centers the container */
+    max-width: 2000px; /* Set a maximum width for the container */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Styles for the content boxes */
+.content-box {
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    min-width: 400px; /* Minimum width for the box */
+    flex: 1; /* Make the boxes flexible */
+}
+
+/* Optional: make the task management box skinnier */
+.task-box {
+    flex: 0.8; /* Slightly skinnier task box */
+    max-width: 800px; /* Sets a reasonable maximum width for the task management box */
+}
+
+/* To handle screen sizes and prevent overlap */
+@media (max-width: 768px) {
+    .main-container {
+        flex-wrap: wrap; /* Allows wrapping on smaller screens */
+    }
+
+    .content-box {
+        max-width: 100%; /* Ensures the boxes stack on small screens */
+    }
+}
+
+.copied-success {
+    background-color: #28a745 !important; /* Green color for success */
+    color: white !important;
+}
+
+.copied-failure {
+    background-color: #dc3545 !important; /* Red color for failure */
+    color: white !important;
+}
+
+/* Confirmation Modal Styling */
+#confirmModal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Black background with transparency */
+    padding-top: 60px;
+}
+
+#confirmModal .modal-content {
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #444;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.confirm-button, .cancel-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.confirm-button:hover {
+    background-color: #0056b3;
+}
+
+.cancel-button:hover {
+    background-color: #444;
+}
+
+#profileList li {
+    font-size: 18px; /* Increase the font size */
+    padding: 10px 0; /* Add some padding for spacing */
+    font-weight: bold; /* Make the text bold for better readability */
+    color: #f0f0f0; /* Adjust the text color if needed */
+    list-style-type: disc; /* Ensure there's a bullet point or choose another type */
+}
+
+#profileList {
+    margin-left: 20px; /* Optional: Add margin to indent the list */
+}
+
+#profileList li button {
+    margin-left: 10px; /* Adds space between the profile text and buttons */
+}
+
+#profileList li button:nth-child(5) {
+    background-color: #dc3545; /* Red color for delete button */
+    color: white; /* White text */
+    border: none; /* Remove border */
+    padding: 8px 12px; /* Add some padding */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+#profileList li button:nth-child(5):hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+
+/* Profile popup */
+.profile-popup {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -20%);
+    background-color: #2a2a2a; /* Dark background */
+    color: #f0f0f0;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    max-width: 600px; /* Limit width */
+    width: 100%; /* Responsive width */
+}
+
+/* Profile row layout */
+.profile-row, .tracking-row {
+    display: flex;
+    justify-content: space-between; /* Space between the text and the button */
+    align-items: center; /* Align button vertically with the text */
+    padding: 10px 0; /* Space between rows */
+}
+
+/* Add space between the button and text */
+.profile-row p, .tracking-row p {
+    margin: 0;
+    flex: 1;
+}
+
+/* Bold text for profile and tracking info */
+.profile-row p strong, .tracking-row p strong {
+    font-weight: bold;
+}
+
+/* Gray box styling for profile and tracking data */
+.gray-box {
+    background-color: #3b3b3b;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+/* Larger font for tracking information */
+.tracking-row p {
+    font-size: 18px; /* Increase font size */
+}
+
+/* Style for the copy button */
+.copy-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Copy button hover effect */
+.copy-button:hover {
+    background-color: #0056b3;
+}
+
+/* Blue button for Copy All Tracking */
+.blue-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.blue-button:hover {
+    background-color: #0056b3;
+}
+
+/* Save, edit, and copy-all buttons aligned */
+#saveTrackingButton, #editTrackingButton {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Close button styling */
+button:active {
+    transform: scale(0.98); /* Slight shrink on click */
+}
+
+#refreshProfilesButton {
+    background-color: #dc3545; /* Red color like the delete button */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#refreshProfilesButton:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+#confirmRefresh {
+    background-color: #dc3545; /* Red color like the delete button */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#confirmRefresh:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+    </style>
+</body>
+</html>
+
