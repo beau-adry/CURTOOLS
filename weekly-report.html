@@ -21,33 +21,26 @@
     <div class="content">
         <h1>Weekly Inventory Report</h1>
         
-        <!-- Report Title Section -->
         <div class="report-wrapper">
             <p id="reportTitle" class="report-title"></p>
             <button class="copy-button" onclick="copyToClipboard('reportTitle', this)">Copy</button>
         </div>
 
-        <!-- File Upload Section for Assets -->
         <h2>Upload Asset JSON File</h2>
         <input type="file" id="assetFileInput" accept=".json" />
         <button onclick="processAssetFile()">Generate Asset Report</button>
 
-        <!-- File Upload Section for Accessories -->
-        <h2>Upload Accessory JSON File</h2>
+        <h2>Upload Consumables JSON File</h2>
         <input type="file" id="accessoryFileInput" accept=".json" />
-        <button onclick="processAccessoryFile()">Add Accessories to Report</button>
+        <button onclick="processAccessoryFile()">Add Consumables to Report</button>
 
-        <!-- Report Section -->
-        <h2>Asset and Accessory Report</h2>
+        <h2>Asset and Consumable Report</h2>
         <div id="reportTable"></div>
 
-        <!-- Truncated Report for Below Par -->
         <h2>Below Par Report</h2>
         <div id="belowParReport"></div>
-        <button class="copy-button" onclick="copyToClipboard('belowParReport', this)">Copy Below Par Report</button>
         <button onclick="generatePDF()">Generate PDF</button>
         <button onclick="generateTicketResponse()">Generate & Copy Ticket Response</button>
-
     </div>
 
     <script>
@@ -55,39 +48,51 @@
         let accessoryData = null;
 
         function generateTicketResponse() {
-            const desktopPar = 12;
-            const laptopPar = 6;
+    // Par levels for each item type
+    const desktopPar = 12;
+    const laptopPar = 6;
+    const monitorPar = 40;
 
-            // These are placeholders; replace with your actual counts
-            let desktopsCount = assetData["Desktop"].count;
-            let laptopsCount = assetData["Laptop"].count;
+    // Asset counts
+    let desktopsCount = assetData["Desktop"] ? assetData["Desktop"].count : 0;
+    let laptopsCount = assetData["Laptop"] ? assetData["Laptop"].count : 0;
 
-            let desktopBelow = desktopPar - desktopsCount > 0 ? desktopPar - desktopsCount : 0;
-            let laptopBelow = laptopPar - laptopsCount > 0 ? laptopPar - laptopsCount : 0;
+    // Monitor count
+    let monitorsCount = accessoryData["Monitor"] ? accessoryData["Monitor"].count : 0;
 
-            let response = `Hello Jason,\n\nAttached is the current inventory report.\n\nWe currently have the following kits available.\n${desktopsCount}x Desktops\n${laptopsCount}x Laptops`;
+    // Calculate items below par
+    let desktopBelow = desktopPar - desktopsCount > 0 ? desktopPar - desktopsCount : 0;
+    let laptopBelow = laptopPar - laptopsCount > 0 ? laptopPar - laptopsCount : 0;
+    let monitorBelow = monitorPar - monitorsCount > 0 ? monitorPar - monitorsCount : 0;
 
-            if (desktopBelow > 0 || laptopBelow > 0) {
-                response += `\n\nWe are below par levels and need to order the following:`;
-                if (desktopBelow > 0) {
-                    response += `\n${desktopBelow}x Dell Optiplex's`;
-                }
-                if (laptopBelow > 0) {
-                    response += `\n${laptopBelow}x Laptops`;
-                }
-            }
+    // Generate response message
+    let response = `Hello Jason,\n\nAttached is the current inventory report.\n\nWe currently have the following kits available:\n${desktopsCount}x Desktops\n${laptopsCount}x Laptops\n${monitorsCount}x Monitors`;
 
-            response += `\n\nThank you,\nAdrytech Support`;
+    // Add information about items below par, if any
+    if (desktopBelow > 0 || laptopBelow > 0 || monitorBelow > 0) {
+        response += `\n\nWe are below par levels and need to order the following:`;
+        if (desktopBelow > 0) {
+            response += `\n${desktopBelow}x Dell Optiplex's`;
+        }
+        if (laptopBelow > 0) {
+            response += `\n${laptopBelow}x Laptops`;
+        }
+        if (monitorBelow > 0) {
+            response += `\n${monitorBelow}x Monitors`;
+        }
+    }
 
-// Copy the generated response to clipboard
-const tempInput = document.createElement('textarea');
+    response += `\n\nThank you,\nAdrytech Support`;
+
+    // Copy the generated response to clipboard
+    const tempInput = document.createElement('textarea');
     tempInput.value = response;
     document.body.appendChild(tempInput);
     tempInput.select();
     document.execCommand("copy");
     document.body.removeChild(tempInput);
 
-    // Optional: Add some visual feedback, e.g., change button text temporarily
+    // Optional: Add visual feedback to the button
     const button = document.querySelector('button[onclick="generateTicketResponse()"]');
     button.textContent = "Copied!";
     button.classList.add('copied');
@@ -98,7 +103,8 @@ const tempInput = document.createElement('textarea');
     }, 2000);
 }
 
-        function getWeekRange() {
+
+        function displayReportTitle() {
             const today = new Date();
             const dayOfWeek = today.getDay();
             const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -109,12 +115,6 @@ const tempInput = document.createElement('textarea');
             const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
             const mondayString = monday.toLocaleDateString('en-US', options).replace(/\//g, '-');
             const sundayString = sunday.toLocaleDateString('en-US', options).replace(/\//g, '-');
-
-            return { mondayString, sundayString };
-        }
-
-        function displayReportTitle() {
-            const { mondayString, sundayString } = getWeekRange();
             const reportTitle = `Currance Weekly Inventory ${mondayString}/${sundayString}`;
             document.getElementById('reportTitle').textContent = reportTitle;
         }
@@ -132,66 +132,6 @@ const tempInput = document.createElement('textarea');
             setTimeout(() => {
                 buttonElement.classList.remove('copied');
             }, 2000);
-        }
-
-        function copyTruncatedReport() {
-            const truncatedReportText = document.getElementById('belowParReport').textContent;
-            const tempInput = document.createElement('textarea');
-            tempInput.value = truncatedReportText;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            alert("Below par report copied to clipboard.");
-        }
-
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
-            const rows = [];
-
-            const tableRows = document.querySelectorAll('#reportTable table tbody tr');
-            tableRows.forEach(row => {
-                const columns = Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim());
-                const category = columns[0];
-                if (category === "Monitor") {
-                    const modelsCell = row.querySelector('td:nth-child(5)').innerText;
-                    columns[4] = modelsCell.split('\n').join(', ').trim();
-                }
-                rows.push(columns);
-            });
-
-            doc.autoTable({
-                head: [headers],
-                body: rows,
-                startY: 20,
-                theme: 'grid',
-                styles: {
-                    halign: 'left',
-                    fillColor: [52, 73, 94],
-                    textColor: [255, 255, 255],
-                },
-                headStyles: {
-                    fillColor: [34, 34, 34],
-                    textColor: [255, 255, 255],
-                },
-                bodyStyles: {
-                    fillColor: [245, 245, 245],
-                    textColor: [0, 0, 0],
-                },
-                alternateRowStyles: {
-                    fillColor: [240, 240, 240],
-                }
-            });
-
-            const reportTitle = document.getElementById('reportTitle').textContent;
-            doc.setFontSize(16);
-            doc.text(reportTitle, 14, 15);
-
-            const fileName = reportTitle.replace(/\s+/g, '_').replace(/\//g, '-') + '.pdf';
-            doc.save(fileName);
         }
 
         function processAssetFile() {
@@ -224,15 +164,15 @@ const tempInput = document.createElement('textarea');
                 reader.onload = function(event) {
                     try {
                         const jsonData = JSON.parse(event.target.result);
-                        accessoryData = parseAccessories(jsonData.data);
+                        accessoryData = parseConsumables(jsonData.data);
                         displayParsedData();
                     } catch (error) {
-                        alert('Invalid accessory JSON file.');
+                        alert('Invalid consumables JSON file.');
                     }
                 };
                 reader.readAsText(file);
             } else {
-                alert('Please upload an accessory JSON file.');
+                alert('Please upload a consumables JSON file.');
             }
         }
 
@@ -241,8 +181,10 @@ const tempInput = document.createElement('textarea');
             const categories = { "Desktop": { count: 0, parLevel: parLevels["Desktop"], missing: 0 }, "Laptop": { count: 0, parLevel: parLevels["Laptop"], missing: 0 } };
 
             data.forEach(item => {
-                if (item["Category"] === "Desktop") categories["Desktop"].count += 1;
-                else if (item["Category"] === "Laptop") categories["Laptop"].count += 1;
+                if (item["Status"] === "Deployable") {
+                    if (item["Category"] === "Desktops") categories["Desktop"].count += 1;
+                    else if (item["Category"] === "Laptops") categories["Laptop"].count += 1;
+                }
             });
 
             for (const key in categories) {
@@ -254,67 +196,33 @@ const tempInput = document.createElement('textarea');
             return categories;
         }
 
-        function parseAccessories(data) {
+        function parseConsumables(data) {
             const parLevels = {
                 "Monitor": 40,
-                "Ethernet Cable": 12,
-                "Display Cables": { "HDMI to DP": 20, "HDMI": 20, "DP": 20 },
-                "Web Camera": 12,
-                "Wireless Keyboard + Mouse": 12,
-                "Headset": 20
+                "Accessory Kit": 18
             };
 
             const categories = {
-                "HDMI": { count: 0, parLevel: parLevels["Display Cables"]["HDMI"], missing: 0 },
-                "DP": { count: 0, parLevel: parLevels["Display Cables"]["DP"], missing: 0 },
-                "HDMI to DP": { count: 0, parLevel: parLevels["Display Cables"]["HDMI to DP"], missing: 0 },
-                "Ethernet Cable": { count: 0, parLevel: parLevels["Ethernet Cable"], missing: 0 },
                 "Monitor": { count: 0, parLevel: parLevels["Monitor"], missing: 0, models: {} },
-                "Web Camera": { count: 0, parLevel: parLevels["Web Camera"], missing: 0 },
-                "Wireless Keyboard + Mouse": { count: 0, parLevel: parLevels["Wireless Keyboard + Mouse"], missing: 0 },
-                "Headset": { count: 0, parLevel: parLevels["Headset"], missing: 0 }
+                "Accessory Kit": { count: 0, parLevel: parLevels["Accessory Kit"], missing: 0 }
             };
 
             data.forEach(item => {
-                const category = item["Accessory Category"];
+                const category = item["Category"];
+                const name = item["Name"];
                 const model = item["Model No."];
-                const available = parseInt(item["Avail"], 10) || 0;
+                const remaining = parseInt(item["Remaining"], 10) || 0;
 
-                if (category === "Display Cables") {
-                    if (item["Name"].includes("HDMI to Display Port")) {
-                        categories["HDMI to DP"].count += available;
-                    } else if (item["Name"].includes("HDMI")) {
-                        categories["HDMI"].count += available;
-                    } else if (item["Name"].includes("Display Port")) {
-                        categories["DP"].count += available;
-                    }
-                } else if (category === "Network Cable" && item["Name"].includes("Ethernet Cable: 50ft")) {
-                    categories["Ethernet Cable"].count += available;
-                } else if (category === "Monitor" && model !== "34UM68") {
-                    categories["Monitor"].count += available;
+                if (category === "Monitors" && model === "E2424HS") {
+                    categories["Monitor"].count += remaining;
                     if (!categories["Monitor"].models[model]) {
                         categories["Monitor"].models[model] = 0;
                     }
-                    categories["Monitor"].models[model] += available;
-                } else if (category === "Web Camera") {
-                    categories["Web Camera"].count += available;
-                } else if (category === "Keyboard + Mouse Bundle" && (model === "MK235" || model === "KM5221W")) {
-                    categories["Wireless Keyboard + Mouse"].count += available;
-                } else if (category === "Headset") {
-                    categories["Headset"].count += available;
+                    categories["Monitor"].models[model] += remaining;
+                } else if (category === "Accessory Kits" && name === "Accessory Kit") {
+                    categories["Accessory Kit"].count += remaining;
                 }
             });
-
-            for (const model in categories["Monitor"].models) {
-                const roundedModelCount = Math.floor(categories["Monitor"].models[model] / 2) * 2;
-                categories["Monitor"].models[model] = roundedModelCount;
-
-                if (roundedModelCount === 0) {
-                    delete categories["Monitor"].models[model];
-                }
-            }
-
-            categories["Monitor"].count = Object.values(categories["Monitor"].models).reduce((total, count) => total + count, 0);
 
             for (const key in categories) {
                 if (categories[key].count < categories[key].parLevel) {
@@ -337,9 +245,9 @@ const tempInput = document.createElement('textarea');
             table.style.borderCollapse = 'collapse';
             table.style.textAlign = 'left';
 
+            const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
             const thead = document.createElement('thead');
             const headerRow = document.createElement('tr');
-            const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
 
             headers.forEach(headerText => {
                 const th = document.createElement('th');
@@ -377,7 +285,6 @@ const tempInput = document.createElement('textarea');
 
                 const modelsCell = document.createElement('td');
                 modelsCell.style.padding = '10px';
-
                 if (category === "Monitor" && Object.keys(categoryData.models).length > 0) {
                     const modelsList = document.createElement('ul');
                     for (const model in categoryData.models) {
@@ -401,24 +308,72 @@ const tempInput = document.createElement('textarea');
 
             table.appendChild(tbody);
             reportDiv.appendChild(table);
-
-            let truncatedReport = '';
-            for (const category in mergedCategories) {
-                const categoryData = mergedCategories[category];
-                if (categoryData.missing > 0) {
-                    truncatedReport += `<h3>${category}</h3><p>Missing to meet par: ${categoryData.missing}</p>`;
-                }
-            }
-
-            belowParDiv.innerHTML = truncatedReport;
         }
+
+        function generatePDF() {
+    // Ensure jsPDF is properly initialized
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Headers for the PDF table
+    const headers = ['Category', 'Current Inventory', 'Par Level', 'Missing to Meet Par', 'Models'];
+    const rows = [];
+
+    // Extract table data from the report table for PDF
+    const tableRows = document.querySelectorAll('#reportTable table tbody tr');
+    tableRows.forEach(row => {
+        const columns = Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim());
+        
+        // Format the "Models" cell for monitors, if applicable
+        if (columns[0] === "Monitor") {
+            const modelsCell = row.querySelector('td:nth-child(5)').innerText;
+            columns[4] = modelsCell.split('\n').join(', ').trim(); // Join model items into a single string
+        }
+        rows.push(columns);
+    });
+
+    // Use autoTable to add the table to the PDF
+    doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 20,
+        theme: 'grid',
+        styles: {
+            halign: 'left',
+            fillColor: [52, 73, 94],
+            textColor: [255, 255, 255],
+        },
+        headStyles: {
+            fillColor: [34, 34, 34],
+            textColor: [255, 255, 255],
+        },
+        bodyStyles: {
+            fillColor: [245, 245, 245],
+            textColor: [0, 0, 0],
+        },
+        alternateRowStyles: {
+            fillColor: [240, 240, 240],
+        }
+    });
+
+    // Set the title and format file name
+    const reportTitle = document.getElementById('reportTitle').textContent;
+    doc.setFontSize(16);
+    doc.text(reportTitle, 14, 15);
+
+    // Create a file name, replacing special characters
+    const fileName = reportTitle.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '.pdf';
+    
+    // Save the PDF
+    doc.save(fileName);
+}
 
         window.onload = displayReportTitle;
     </script>
 
     <style>
         .copied {
-            background-color: #28a745 !important; /* Green color for success */
+            background-color: #28a745 !important;
             color: white !important;
         }
     </style>
